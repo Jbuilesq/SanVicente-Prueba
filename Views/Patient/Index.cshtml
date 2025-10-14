@@ -1,0 +1,173 @@
+@model IEnumerable<Patient>
+
+@{
+    ViewData["Title"] = "Pacientes";
+}
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-secondary text-white">
+            <h2 class="text-center">Pacientes</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-3 m-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Crear paciente</h3>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="Create">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div> 
+                            <div>
+                                <label for="Name">Nombre</label>
+                                <input type="text" class="form-control" name="Name" required/>
+                            </div>
+                            <div>
+                                <label for="LastName">Apellidos</label>
+                                <input type="text" class="form-control" name="LastName" required/>
+                            </div>
+                            <div>
+                                <label for="DNI" class="text-center">Numero de documento</label>
+                                <input type="number" min="0" step="1" class="form-control" name="DNI" required>
+                                
+                                @Html.ValidationMessage("DNI", new { @class = "text-danger" })
+
+                            </div>
+                            <div>
+                                <label for="Age" class="text-center">Edad</label>
+                                <input type="number" min="0" step="1" class="form-control" name="Age" required>
+                            </div>
+                            <div>
+                                <label for="Phone">Celular</label>
+                                <input type="number" min="0" class="form-control" name="Phone" required/>
+                            </div>
+                            <div>
+                                <label for="Email">Correo</label>
+                                <input type="email" class="form-control" name="Email" required/>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-2">Guardar</button>
+                        </form>
+                    </div>  
+                </div>
+            </div>
+            
+            
+            <div class="col-md-8">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>N.Cedula</th>
+                        <th>Edad</th>
+                        <th>Celular</th>
+                        <th>Correo</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model != null)
+                    {
+                        foreach (var patient in Model)
+                        {
+                            <tr>
+                                <td>@patient.Id</td>
+                                <td>@patient.Name</td>
+                                <td>@patient.LastName</td>
+                                <td>@patient.DNI</td>
+                                <td>@patient.Age</td>
+                                <td>@patient.Phone</td>
+                                <td>@patient.Email</td>
+                                <td>
+                                    <button type="button" class="btn btn-warning"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editModal"
+                                            data-id="@patient.Id"
+                                            data-Name="@patient.Name"
+                                            data-LastName="@patient.LastName"
+                                            data-DNI="@patient.DNI"
+                                            data-Age="@patient.Age"
+                                            data-Phone="@patient.Phone"
+                                            data-Email="@patient.Email"
+                                            >
+                                        Editar
+                                    </button>
+                                    <a class="btn btn-danger" asp-action="Delete" asp-controller="Patient"
+                                       asp-route-id="@patient.Id">Eliminar</a>
+
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    @* Logica del Modal *@
+
+    <!-- MODAL PARA EDITAR -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title text-center">Editar Paciente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" id="edit-id" name="Id" />
+
+                    <div>
+                        <label for="edit-name">Nombre</label>
+                        <input type="text" class="form-control" name="Name" id="edit-name" required />
+                    </div>
+                    <div>
+                        <label for="edit-lastname">Apellidos</label>
+                        <input type="text" class="form-control" name="LastName" id="edit-lastname" required />
+                    </div>
+                    <div>
+                        <label for="edit-dni">Número de Documento (DNI)</label>
+                        <input type="number" min="0" step="1" class="form-control" name="DNI" id="edit-dni" readonly>
+                    </div>
+                    <div>
+                        <label for="edit-age">Edad</label>
+                        <input type="number" min="0" step="1" class="form-control" name="Age" id="edit-age" required>
+                    </div>
+                    <div>
+                        <label for="edit-phone">Celular</label>
+                        <input type="number" min="0" class="form-control" name="Phone" id="edit-phone" required />
+                    </div>
+                    <div>
+                        <label for="edit-email">Correo</label>
+                        <input type="email" class="form-control" name="Email" id="edit-email" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+</div>
+
+
+
+<script>
+    const  editModal = document.getElementById("editModal");
+    editModal.addEventListener("show.bs.modal", event => {
+        const button = event.relatedTarget;
+        document.getElementById('edit-id').value = button.getAttribute('data-id');
+        document.getElementById('edit-name').value = button.getAttribute('data-name');
+        document.getElementById('edit-lastname').value = button.getAttribute('data-lastname');
+        document.getElementById('edit-dni').value = button.getAttribute('data-dni');
+        document.getElementById('edit-age').value = button.getAttribute('data-age');
+        document.getElementById('edit-phone').value = button.getAttribute('data-phone');
+        document.getElementById('edit-email').value = button.getAttribute('data-email');
+
+    } )
+</script>

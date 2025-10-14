@@ -1,0 +1,282 @@
+@model IEnumerable<SanVicente.Models.Appointment>
+
+@{
+    ViewData["Title"] = "Citas";
+    
+    // Type casting ViewBags for better type safety
+    IEnumerable<Patient> patientsList = ViewBag.patientList;
+    IEnumerable<Doctor> doctorsList = ViewBag.doctorList;
+}
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-secondary text-white">
+            <h2 class="text-center">Citas</h2>
+        </div>
+        
+        <div class="row p-3">
+            @* Filter Form Section *@
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Filter Appointments</h5>
+                        <form asp-action="GetByFilter" method="get" class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="patientId" class="form-label">Filter by Patient</label>
+                                <select name="patientId" id="patientId" class="form-select">
+                                    <option value="">Show All Patients</option>
+                                    @{
+                                        foreach (var patient in patientsList)
+                                        {
+                                            <option value="@patient.Id">@patient.Name @patient.LastName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="doctorId" class="form-label">Filter by Doctor</label>
+                                <select name="doctorId" id="doctorId" class="form-select">
+                                    <option value="">Show All Doctors</option>
+                                    @{
+                                        foreach (var doc in doctorsList)
+                                        {
+                                            <option value="@doc.Id">@doc.Name @doc.LastName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-info w-100">Apply Filter</button>
+                            </div>
+                            <div class="col-md-2">
+                                <a asp-action="Index" class="btn btn-secondary w-100">Clear Filter</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 m-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Crear nueva cita</h3>
+                    </div>
+                    <div class="card-body">
+                        <form asp-controller="Appointment" asp-action="Create" method="post">
+                            @Html.AntiForgeryToken()
+                            
+                            @* Displays Model level errors (including conflict errors) *@
+                            <div asp-validation-summary="All" class="text-danger"></div> 
+
+                            <div class="mb-2">
+                                <label for="DoctorId">Doctor</label>
+                                <select name="DoctorId" id="DoctorId" class="form-control" required>
+                                    <option value="" disabled selected>Selecciona un Doctor</option>
+                                    @{
+                                        foreach (var doc in doctorsList)
+                                        {
+                                            <option value="@doc.Id">@doc.Name @doc.LastName (@doc.Specialty)</option>
+                                        }
+                                    }
+                                </select>
+                                @Html.ValidationMessage("DoctorId", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="PatientId">Paciente</label>
+                                <select name="PatientId" id="PatientId" class="form-control" required>
+                                    <option value="" disabled selected>Selecciona un Paciente</option>
+                                    @{
+                                        foreach (var patient in patientsList)
+                                        {
+                                            <option value="@patient.Id">@patient.Name @patient.LastName (@patient.DNI)
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                @Html.ValidationMessage("PatientId", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="Date">Fecha y Hora</label>
+                                <input type="datetime-local" class="form-control" name="Date" id="Date" required/>
+                                @Html.ValidationMessage("Date", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="AppointmentStatus">Estado</label>
+                                <select name="AppointmentStatus" id="AppointmentStatus" class="form-control" required>
+                                    <option value="Pendiente" selected>Pendiente</option>
+                                    <option value="Confirmada">Confirmada</option>
+                                    <option value="Completada">Completada</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                </select>
+                                @Html.ValidationMessage("AppointmentStatus", new { @class = "text-danger" })
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-2">Guardar Cita</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-md-8">
+                <h4>@ViewData["CurrentFilter"]</h4> @* Display the current filter *@
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Fecha</th>
+                        <th>Doctor</th>
+                        <th>Paciente</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model != null)
+                    {
+                        foreach (var appointment in Model)
+                        {
+                            <tr>
+                                <td>@appointment.Id</td>
+                                <td>@appointment.Date.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(appointment.Doctor?.Name + " " + appointment.Doctor?.LastName ?? "N/A")</td> 
+                                <td>@(appointment.Patient?.Name + " " + appointment.Patient?.LastName ?? "N/A")</td> 
+                                <td>@appointment.AppointmentStatus</td>
+                                <td>
+                                    <div >
+                                        @* Edit Button (Modal trigger) *@
+                                        <button type="button" class="btn btn-warning "
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editModal"
+                                                data-id="@appointment.Id"
+                                                data-date="@appointment.Date.ToString("yyyy-MM-ddTHH:mm")"
+                                                data-status="@appointment.AppointmentStatus"
+                                                data-patientid="@appointment.PatientId"
+                                                data-doctorid="@appointment.DoctorId"
+                                        >
+                                            Editar
+                                        </button>
+
+                                        @* Status Actions *@
+                                        @* @if (appointment.AppointmentStatus == "Pendiente" || appointment.AppointmentStatus == "Confirmada") *@
+                                        @* { *@
+                                        @*     <form asp-action="MarkAsCompleted" method="post" style="display:inline;"> *@
+                                        @*         @Html.AntiForgeryToken() *@
+                                        @*         <input type="hidden" name="id" value="@appointment.Id"/> *@
+                                        @*         <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('¿Marcar como Completada (Atendida)?');">Atendida</button> *@
+                                        @*     </form> *@
+                                        @*      *@
+                                        @*     <form asp-action="MarkAsCancelled" method="post" style="display:inline;"> *@
+                                        @*         @Html.AntiForgeryToken() *@
+                                        @*         <input type="hidden" name="id" value="@appointment.Id"/> *@
+                                        @*         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Cancelar la cita?');">Cancelar</button> *@
+                                        @*     </form> *@
+                                        @* } *@
+                                        
+                                        @* Delete Action *@
+                                        <a class="btn btn-danger " asp-action="Delete" asp-controller="Appointment"
+                                           asp-route-id="@appointment.Id"
+                                           onclick="return confirm('¿Está seguro de que desea eliminar permanentemente esta cita?');">Eliminar</a>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* Edit Modal (No changes here, remains the same) *@
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h5 class="modal-title text-center">Editar Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="edit-id" name="Id"/> 
+
+                        <div class="mb-2">
+                            <label for="edit-DoctorId">Doctor</label>
+                            <select name="DoctorId" id="edit-DoctorId" class="form-control" required>
+                                <option value="" disabled selected>Selecciona un Doctor</option>
+                                @{
+                                    foreach (var doc in doctorsList)
+                                    {
+                                        <option value="@doc.Id">@doc.Name @doc.LastName (@doc.Specialty)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="edit-PatientId">Paciente</label>
+                            <select name="PatientId" id="edit-PatientId" class="form-control" required>
+                                <option value="" disabled selected>Selecciona un Paciente</option>
+                                @{
+                                    foreach (var patient in patientsList)
+                                    {
+                                        <option value="@patient.Id">@patient.Name @patient.LastName (@patient.DNI)
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="edit-Date">Fecha y Hora</label>
+                            <input type="datetime-local" class="form-control" name="Date" id="edit-Date" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="edit-AppointmentStatus">Estado</label>
+                            <select name="AppointmentStatus" id="edit-AppointmentStatus" class="form-control" required>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Confirmada">Confirmada</option>
+                                <option value="Cancelada">Cancelada</option>
+                                <option value="Completada">Completada</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-3">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const editModal = document.getElementById("editModal");
+
+        editModal.addEventListener("show.bs.modal", event => {
+            const button = event.relatedTarget; 
+
+            // Get data from data-* attributes
+            const id = button.getAttribute('data-id');
+            const date = button.getAttribute('data-date');
+            const status = button.getAttribute('data-status');
+            const patientId = button.getAttribute('data-patientid');
+            const doctorId = button.getAttribute('data-doctorid');
+
+            // Populate modal fields
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-Date').value = date;
+            
+            // Set selected value for dropdowns
+            document.getElementById('edit-AppointmentStatus').value = status; 
+            document.getElementById('edit-PatientId').value = patientId; 
+            document.getElementById('edit-DoctorId').value = doctorId;
+        });
+    </script>
+}

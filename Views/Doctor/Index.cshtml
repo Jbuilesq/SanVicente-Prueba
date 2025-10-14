@@ -1,0 +1,234 @@
+@model IEnumerable<Doctor>
+
+@{
+    ViewData["Title"] = "Doctores";
+}
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-secondary text-white">
+            <h2 class="text-center">Doctores</h2>
+        </div>
+        <div class="row">
+            
+            <div class="col-md-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Filter </h5>
+                        @* ***CORRECCIÓN: Se apunta a la acción Index que contiene la lógica de filtrado*** *@
+                        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label for="specialtyFilter" class="form-label">Filtrar por Especialidad</label>
+                                @{
+                                    // Obtener especialidades únicas del modelo para el filtro
+                                    var uniqueSpecialties = Model.Select(d => d.Specialty).Distinct();
+                                }
+                                <select name="specialtyFilter" id="specialtyFilter" class="form-select">
+                                    <option value="">Mostrar todas las especialidades</option>
+                                    @{
+                                        // Generar opciones con la especialidad como valor (value)
+                                        foreach (var specialty in uniqueSpecialties)
+                                        {
+                                            <option value="@specialty">@specialty</option>
+                                        }
+                                    }
+                                </select>
+                               
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-info w-100">Aplicar Filtro</button>
+                            </div>
+                            <div class="col-md-2">
+                                <a asp-action="Index" class="btn btn-secondary w-100">Limpiar Filtro</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="col-md-3 m-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Crear doctor</h3>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="Create">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <div>
+                                <label for="Name">Nombre</label>
+                                <input type="text" class="form-control" name="Name" required/>
+                            </div>
+                            <div>
+                                <label for="LastName">Apellidos</label>
+                                <input type="text" class="form-control" name="LastName" required/>
+                            </div>
+                            <div>
+                                <label for="DNI" class="text-center">Numero de documento</label>
+                                <input type="number" min="0" step="1" class="form-control" name="DNI" required>
+
+                                @Html.ValidationMessage("DNI", new { @class = "text-danger" })
+
+                            </div>
+                            <div>
+                                <label for="Age" class="text-center">Edad</label>
+                                <input type="number" min="0" step="1" class="form-control" name="Age" required>
+                            </div>
+                            <div>
+                                <label for="Phone">Celular</label>
+                                <input type="number" min="0" class="form-control" name="Phone" required/>
+                            </div>
+                            <div>
+                                <label for="Email">Correo</label>
+                                <input type="email" class="form-control" name="Email" required/>
+                            </div>
+                            <br>
+                            <div>
+                                <select name="Specialty" id="Specialty-id" class="form-control" required>
+                                    <option value="" disabled selected>Selecciona una especialidad</option>
+                                    <option value="MedicinaGeneral">Medicina General</option>
+                                    <option value="Pediatria">Pediatría</option>
+                                    <option value="Cardiologia">Cardiología</option>
+                                    <option value="Ginecologia">Ginecología</option>
+                                    <option value="Traumatologia">Traumatología</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-2">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-md-8">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>N.Cedula</th>
+                        <th>Edad</th>
+                        <th>Celular</th>
+                        <th>Correo</th>
+                        <th>Especialidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model != null)
+                    {
+                        foreach (var doctor in Model)
+                        {
+                            <tr>
+                                <td>@doctor.Id</td>
+                                <td>@doctor.Name</td>
+                                <td>@doctor.LastName</td>
+                                <td>@doctor.DNI</td>
+                                <td>@doctor.Age</td>
+                                <td>@doctor.Phone</td>
+                                <td>@doctor.Email</td>
+                                <td>@doctor.Specialty</td>
+                                <td>
+                                    <button type="button" class="btn btn-warning"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editModal"
+                                            data-id="@doctor.Id"
+                                            data-Name="@doctor.Name"
+                                            data-LastName="@doctor.LastName"
+                                            data-DNI="@doctor.DNI"
+                                            data-Age="@doctor.Age"
+                                            data-Phone="@doctor.Phone"
+                                            data-Email="@doctor.Email"
+                                            data-Specialty="@doctor.Specialty">
+                                        Editar
+                                    </button>
+                                    <a class="btn btn-danger" asp-action="Delete" asp-controller="Patient"
+                                       asp-route-id="@doctor.Id">Eliminar</a>
+
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    @* Logica del Modal *@
+
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h5 class="modal-title text-center">Editar Doctor</h5> <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" id="edit-id" name="Id" />
+
+                    <div>
+                        <label for="edit-name">Nombre</label>
+                        <input type="text" class="form-control" name="Name" id="edit-name" required />
+                    </div>
+                    <div>
+                        <label for="edit-lastname">Apellidos</label>
+                        <input type="text" class="form-control" name="LastName" id="edit-lastname" required />
+                    </div>
+                    <div>
+                        <label for="edit-dni">Número de Documento (DNI)</label>
+                        <input type="number" min="0" step="1" class="form-control" name="DNI" id="edit-dni" readonly>
+                    </div>
+                    <div>
+                        <label for="edit-age">Edad</label>
+                        <input type="number" min="0" step="1" class="form-control" name="Age" id="edit-age" required>
+                    </div>
+                    <div>
+                        <label for="edit-phone">Celular</label>
+                        <input type="number" min="0" class="form-control" name="Phone" id="edit-phone" required />
+                    </div>
+                    <div>
+                        <label for="edit-email">Correo</label>
+                        <input type="email" class="form-control" name="Email" id="edit-email" required />
+                    </div>
+                    
+                    <div class="mt-2">
+                        <label for="edit-specialty">Especialidad</label>
+                        <select name="Specialty" id="edit-specialty" class="form-control" required>
+                            <option value="MedicinaGeneral">Medicina General</option>
+                            <option value="Pediatria">Pediatría</option>
+                            <option value="Cardiologia">Cardiología</option>
+                            <option value="Ginecologia">Ginecología</option>
+                            <option value="Traumatologia">Traumatología</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary mt-3">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+
+
+<script>
+    const  editModal = document.getElementById("editModal");
+    editModal.addEventListener("show.bs.modal", event => {
+        const button = event.relatedTarget;
+        document.getElementById('edit-id').value = button.getAttribute('data-id');
+        document.getElementById('edit-name').value = button.getAttribute('data-name');
+        document.getElementById('edit-lastname').value = button.getAttribute('data-lastname');
+        document.getElementById('edit-dni').value = button.getAttribute('data-dni');
+        document.getElementById('edit-age').value = button.getAttribute('data-age');
+        document.getElementById('edit-phone').value = button.getAttribute('data-phone');
+        document.getElementById('edit-email').value = button.getAttribute('data-email');
+        document.getElementById('edit-specialty').value = button.getAttribute('data-specialty');
+
+    } )
+</script>
