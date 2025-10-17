@@ -5,12 +5,15 @@ using SanVicente.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SanVicente.Models.EmailSett;
+using SanVicente.Services;
 
 namespace SanVicente.Controllers
 {
     public class AppointmentController : Controller
     {
         private readonly DbAppContext _context;
+        private readonly EmailService _emailService;
 
         // Constructor for DI
         public AppointmentController(DbAppContext context)
@@ -102,7 +105,7 @@ namespace SanVicente.Controllers
 
                 // Return to Index view with current list and validation errors
                 return View(nameof(Index), appointments);
-            }
+            }   
 
             try
             {
@@ -260,5 +263,39 @@ namespace SanVicente.Controllers
             
             return RedirectToAction(nameof(Index));
         }
+        
+        //Method to send Email
+        
+        public async Task<IActionResult> TestEmail()
+        {
+            var emailBody = $@"
+            <html>
+                <body>
+                    <h1>HOLA Estimado Juan</h1>
+                    <p>tienes una cita pendiente</p>
+                </body>
+            </html>
+        ";
+
+            var response = await _emailService.SendEmailAsync(new EmailMessage
+            {
+                To = "juanda2026@gmail.com",
+                Subject = "PROBANDO",
+                Body = emailBody,
+                IsHtml = true
+            });
+
+            if (response)
+            {
+                ViewBag.EmailMessage = "TODO SALIO PERFECTO LOCO.";
+                return View(nameof(Index));
+            }
+        
+        
+            ViewBag.EmailMessage = null;
+            return View(nameof(Index));
+        }
+        
+        
     }
 }

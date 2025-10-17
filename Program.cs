@@ -1,20 +1,25 @@
 using Microsoft.EntityFrameworkCore;
 using SanVicente.Infraestructure;
+using SanVicente.Models.EmailSett;
 using SanVicente.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// -------------------------------------------------------------
+// Coneccion a la base de datos
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<DbAppContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-void ConfigureServices(IServiceCollection services)
-{
 
-    services.AddScoped<IEmailService, EmailService>(); 
+// --------------------------------------------------------------
+// Coneccion con el servicio correos
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
-}
+builder.Services.AddScoped<EmailService>();
 
-
+//---------------------------------------------------------------
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

@@ -114,7 +114,7 @@
                                 @Html.ValidationMessage("AppointmentStatus", new { @class = "text-danger" })
                             </div>
 
-                            <button type="submit" class="btn btn-primary mt-2">Guardar Cita</button>
+                            <button type="submit" class="btn btn-primary mt-2" asp-action="TestEmail" asp-controller="Appointment">Guardar Cita</button>
                         </form>
                     </div>
                 </div>

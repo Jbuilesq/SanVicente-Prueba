@@ -1,6 +1,7 @@
 // SanVicente.Models/Appointment.cs
 
-using System.ComponentModel.DataAnnotations.Schema; // Added for clarity
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation; // Added for clarity
 
 namespace SanVicente.Models;
 
@@ -11,7 +12,9 @@ public class Appointment
     public string AppointmentStatus { get; set; }
     
     // Foreign Keys
+    [ForeignKey("Patient")]
     public int PatientId { get; set; }
+    [ForeignKey("Doctor")]
     public int DoctorId { get; set; }
 
     // Navigation Properties (required for join/Include)
